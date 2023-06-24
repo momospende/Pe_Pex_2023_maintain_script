@@ -1,14 +1,21 @@
-import subprocess
-import sys
+import argparse
+import git
 
 
-if len(sys.argv) == 3:
-    tag = sys.argv[1]
-    commit = sys.argv[2]
-    command = 'git tag -a {0} {1} -m "{2}"'.format(tag, commit, tag)
-    output = subprocess.check_output(command, shell=True).decode('utf-8')
-    subprocess.call(command, shell=True)
-    subprocess.call('git push --tags', shell=True)
-else:
-    print('usage: tag.py TAG_NAME COMMIT')
-    sys.exit(1)
+def set_git_tag(tag, commit):
+    repo = git.Repo()
+    try:
+        repo.git.tag(tag, commit, m=tag)
+        repo.remotes.origin.push(tag)
+    except git.GitCommandError as e:
+        print(f"Error: {e}")
+        return
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Set a git tag on a commit.")
+    parser.add_argument("tag", help="Name of the tag")
+    parser.add_argument("commit", help="Commit to tag")
+    args = parser.parse_args()
+
+    set_git_tag(args.tag, args.commit)
